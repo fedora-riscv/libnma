@@ -1,7 +1,9 @@
 %global gtk3_version    %(pkg-config --modversion gtk+-3.0 2>/dev/null || echo bad)
 %global gtk4_version    %(pkg-config --modversion gtk4 2>/dev/null || echo bad)
 %global glib2_version   %(pkg-config --modversion glib-2.0 2>/dev/null || echo bad)
+%global glib2_version   %(pkg-config --modversion glib-2.0 2>/dev/null || echo bad)
 %global nm_version      1:1.8.0
+%global mbp_version     0.20090602
 
 %if 0%{?fedora} > 31 || 0%{?rhel} > 8
 %bcond_without libnma_gtk4
@@ -12,10 +14,13 @@
 Name:           libnma
 Summary:        NetworkManager GUI library
 Version:        1.8.26
-Release:        2%{?dist}
-License:        GPLv2+
+Release:        3%{?dist}
+# The entire source code is GPLv2+ except some files in shared/ which are LGPLv2+
+License:        GPLv2+ and LGPLv2+
 URL:            https://gitlab.gnome.org/GNOME/libnma/
 Source0:        https://download.gnome.org/sources/libnma/1.8/%{name}-%{version}.tar.xz
+
+Requires:       mobile-broadband-provider-info >= %{mbp_version}
 
 BuildRequires:  gcc
 BuildRequires:  NetworkManager-libnm-devel >= %{nm_version}
@@ -32,7 +37,7 @@ BuildRequires:  meson
 BuildRequires:  gtk-doc
 BuildRequires:  iso-codes-devel
 BuildRequires:  gcr-devel
-BuildRequires:  mobile-broadband-provider-info-devel
+BuildRequires:  mobile-broadband-provider-info-devel >= %{mbp_version}
 
 %description
 This package contains the library used for integrating GUI tools with
@@ -55,7 +60,7 @@ GUI tools with NetworkManager.
 %package gtk4
 Summary:        Experimental GTK 4 version of NetworkManager GUI library
 Requires:       gtk4%{?_isa} >= %{gtk4_version}
-Requires:       mobile-broadband-provider-info >= 0.20090602
+Requires:       mobile-broadband-provider-info >= %{mbp_version}
 
 %description gtk4
 This package contains the experimental GTK4 version of library used for
@@ -63,7 +68,7 @@ integrating GUI tools with NetworkManager.
 
 
 %package gtk4-devel
-Summary:        Header files for exerimental GTK4 version of NetworkManager GUI library
+Summary:        Header files for experimental GTK4 version of NetworkManager GUI library
 Requires:       NetworkManager-libnm-devel >= %{nm_version}
 Requires:       libnma-gtk4%{?_isa} = %{version}-%{release}
 Requires:       gtk4-devel%{?_isa}
@@ -130,6 +135,10 @@ files to be used for integrating GUI tools with NetworkManager.
 
 
 %changelog
+* Thu Nov 14 2019 Lubomir Rintel <lkundrak@v3.sk> - 1.8.26-3
+- Clarify licensing
+- Add a missing mobile-broadband-provider-info provide
+
 * Fri Nov 08 2019 Lubomir Rintel <lkundrak@v3.sk> - 1.8.26-2
 - Fixes suggested in review by Matthew Krupcale (#1763285):
 - Add gcc BR
