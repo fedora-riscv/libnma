@@ -4,19 +4,20 @@
 %global nm_version      1:1.8.0
 
 %if 0%{?fedora} > 31 || 0%{?rhel} > 8
-%bcond_with libnma_gtk4
-%else
 %bcond_without libnma_gtk4
+%else
+%bcond_with libnma_gtk4
 %endif
 
 Name:           libnma
 Summary:        NetworkManager GUI library
 Version:        1.8.26
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 URL:            https://gitlab.gnome.org/GNOME/libnma/
 Source0:        https://download.gnome.org/sources/libnma/1.8/%{name}-%{version}.tar.xz
 
+BuildRequires:  gcc
 BuildRequires:  NetworkManager-libnm-devel >= %{nm_version}
 BuildRequires:  ModemManager-glib-devel >= 1.0
 BuildRequires:  glib2-devel >= 2.32
@@ -42,8 +43,8 @@ NetworkManager.
 Summary:        Header files for NetworkManager GUI library
 Requires:       NetworkManager-libnm-devel >= %{nm_version}
 Obsoletes:      NetworkManager-gtk-devel < 1:0.9.7
-Requires:       libnma = %{version}-%{release}
-Requires:       gtk3-devel
+Requires:       libnma%{?_isa} = %{version}-%{release}
+Requires:       gtk3-devel%{?_isa}
 Requires:       pkgconfig
 
 %description devel
@@ -53,7 +54,7 @@ GUI tools with NetworkManager.
 
 %package gtk4
 Summary:        Experimental GTK 4 version of NetworkManager GUI library
-Requires:       gtk4 >= %{gtk4_version}
+Requires:       gtk4%{?_isa} >= %{gtk4_version}
 Requires:       mobile-broadband-provider-info >= 0.20090602
 
 %description gtk4
@@ -64,8 +65,8 @@ integrating GUI tools with NetworkManager.
 %package gtk4-devel
 Summary:        Header files for exerimental GTK4 version of NetworkManager GUI library
 Requires:       NetworkManager-libnm-devel >= %{nm_version}
-Requires:       libnma = %{version}-%{release}
-Requires:       gtk4-devel
+Requires:       libnma-gtk4%{?_isa} = %{version}-%{release}
+Requires:       gtk4-devel%{?_isa}
 Requires:       pkgconfig
 
 %description gtk4-devel
@@ -98,10 +99,6 @@ files to be used for integrating GUI tools with NetworkManager.
 %meson_test
 
 
-%ldconfig_scriptlets -n libnma
-%ldconfig_scriptlets -n libnma-gtk4
-
-
 %files -f %{name}.lang
 %{_libdir}/libnma.so.*
 %{_libdir}/girepository-1.0/NMA-1.0.typelib
@@ -121,6 +118,7 @@ files to be used for integrating GUI tools with NetworkManager.
 %files gtk4
 %{_libdir}/libnma-gtk4.so.*
 %{_libdir}/girepository-1.0/NMA4-1.0.typelib
+%license COPYING
 
 
 %files gtk4-devel
@@ -132,5 +130,13 @@ files to be used for integrating GUI tools with NetworkManager.
 
 
 %changelog
+* Fri Nov 08 2019 Lubomir Rintel <lkundrak@v3.sk> - 1.8.26-2
+- Fixes suggested in review by Matthew Krupcale (#1763285):
+- Add gcc BR
+- Fixed the libnma-gtk4 conditional
+- Made dependencies arch-specific where relevant
+- Dropped obsolete macros
+- Install license file with libnma-gtk4
+
 * Fri Oct 18 2019 Lubomir Rintel <lkundrak@v3.sk> - 1.8.26-1
 - Initial package split from nm-connection-editor
