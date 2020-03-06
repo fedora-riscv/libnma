@@ -1,26 +1,32 @@
-%global gtk3_version    %(pkg-config --modversion gtk+-3.0 2>/dev/null || echo bad)
-%global gtk4_version    %(pkg-config --modversion gtk4 2>/dev/null || echo bad)
-%global glib2_version   %(pkg-config --modversion glib-2.0 2>/dev/null || echo bad)
-%global glib2_version   %(pkg-config --modversion glib-2.0 2>/dev/null || echo bad)
-%global nm_version      1:1.8.0
-%global mbp_version     0.20090602
+%global gtk3_version          %(pkg-config --modversion gtk+-3.0 2>/dev/null || echo bad)
+%global gtk4_version          %(pkg-config --modversion gtk4 2>/dev/null || echo bad)
+%global glib2_version         %(pkg-config --modversion glib-2.0 2>/dev/null || echo bad)
+%global nm_version            1:1.8.0
+%global mbp_version           0.20090602
+%global old_libnma_version    1.8.27
 
-%if 0%{?fedora} > 31 || 0%{?rhel} > 8
-%bcond_without libnma_gtk4
-%else
+%global rpm_version 1.8.28
+%global real_version 1.8.28
+%global release_version 1
+
+%global real_version_major %(printf '%s' '%{real_version}' | sed -n 's/^\\([1-9][0-9]*\\.[1-9][0-9]*\\)\\.[1-9][0-9]*$/\\1/p')
+
 %bcond_with libnma_gtk4
-%endif
 
 Name:           libnma
 Summary:        NetworkManager GUI library
-Version:        1.8.26
-Release:        4%{?dist}
+Version:        %{rpm_version}
+Release:        %{release_version}%{?dist}
 # The entire source code is GPLv2+ except some files in shared/ which are LGPLv2+
 License:        GPLv2+ and LGPLv2+
 URL:            https://gitlab.gnome.org/GNOME/libnma/
-Source0:        https://download.gnome.org/sources/libnma/1.8/%{name}-%{version}.tar.xz
+Source0:        https://download.gnome.org/sources/libnma/%{real_version_major}/%{name}-%{real_version}.tar.xz
+
+Patch1:         0001-nm-applet-no-notifications.patch
 
 Requires:       mobile-broadband-provider-info >= %{mbp_version}
+
+Conflicts:      libnma < %{old_libnma_version}
 
 BuildRequires:  gcc
 BuildRequires:  NetworkManager-libnm-devel >= %{nm_version}
@@ -51,6 +57,7 @@ Obsoletes:      NetworkManager-gtk-devel < 1:0.9.7
 Requires:       libnma%{?_isa} = %{version}-%{release}
 Requires:       gtk3-devel%{?_isa}
 Requires:       pkgconfig
+Conflicts:      libnma < %{old_libnma_version}
 
 %description devel
 This package contains header and pkg-config files to be used for integrating
@@ -61,6 +68,7 @@ GUI tools with NetworkManager.
 Summary:        Experimental GTK 4 version of NetworkManager GUI library
 Requires:       gtk4%{?_isa} >= %{gtk4_version}
 Requires:       mobile-broadband-provider-info >= %{mbp_version}
+Conflicts:      libnma < %{old_libnma_version}
 
 %description gtk4
 This package contains the experimental GTK4 version of library used for
@@ -73,6 +81,7 @@ Requires:       NetworkManager-libnm-devel >= %{nm_version}
 Requires:       libnma-gtk4%{?_isa} = %{version}-%{release}
 Requires:       gtk4-devel%{?_isa}
 Requires:       pkgconfig
+Conflicts:      libnma < %{old_libnma_version}
 
 %description gtk4-devel
 This package contains the experimental GTK4 version of header and pkg-config
@@ -80,13 +89,14 @@ files to be used for integrating GUI tools with NetworkManager.
 
 
 %prep
-%autosetup -p1
+%autosetup -p1 -n "%{name}-%{real_version}"
 
 
 %build
 %meson \
         -Dgcr=true \
         -Ddisable-static=true \
+        -Dvapi=false \
 %if %{with libnma_gtk4}
         -Dlibnma_gtk4=true
 %else
@@ -107,6 +117,7 @@ files to be used for integrating GUI tools with NetworkManager.
 %files -f %{name}.lang
 %{_libdir}/libnma.so.*
 %{_libdir}/girepository-1.0/NMA-1.0.typelib
+%{_datadir}/glib-2.0/schemas/org.gnome.nm-applet.gschema.xml
 %doc NEWS CONTRIBUTING
 %license COPYING
 
@@ -135,6 +146,11 @@ files to be used for integrating GUI tools with NetworkManager.
 
 
 %changelog
+* Fri Mar  6 2020 Thomas Haller <thaller@redhat.com> - 1.8.28-1
+- Update to 1.8.28 release
+- move org.gnome.nm-applet.gschema.xml from network-manager-applet to here.
+- introduce wireless security dialogs
+
 * Wed Jan 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 1.8.26-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
 
