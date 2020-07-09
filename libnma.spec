@@ -5,8 +5,8 @@
 %global mbp_version           0.20090602
 %global old_libnma_version    1.8.27
 
-%global rpm_version 1.8.28
-%global real_version 1.8.28
+%global rpm_version 1.8.30
+%global real_version 1.8.30
 %global release_version 1
 
 %global real_version_major %(printf '%s' '%{real_version}' | sed -n 's/^\\([1-9][0-9]*\\.[1-9][0-9]*\\)\\.[1-9][0-9]*$/\\1/p')
@@ -146,6 +146,9 @@ files to be used for integrating GUI tools with NetworkManager.
 
 
 %changelog
+* Thu Jul  9 2020 Jérôme Parmentier <jerome@prmntr.me> - 1.8.30-1
+- Update to 1.8.30 release
+
 * Fri Mar  6 2020 Thomas Haller <thaller@redhat.com> - 1.8.28-1
 - Update to 1.8.28 release
 - move org.gnome.nm-applet.gschema.xml from network-manager-applet to here.
