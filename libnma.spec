@@ -5,8 +5,8 @@
 %global mbp_version           0.20090602
 %global old_libnma_version    1.8.27
 
-%global rpm_version 1.8.30
-%global real_version 1.8.30
+%global rpm_version 1.8.32
+%global real_version 1.8.32
 %global release_version 1
 
 %global real_version_major %(printf '%s' '%{real_version}' | sed -n 's/^\\([1-9][0-9]*\\.[1-9][0-9]*\\)\\.[1-9][0-9]*$/\\1/p')
@@ -146,6 +146,9 @@ files to be used for integrating GUI tools with NetworkManager.
 
 
 %changelog
+* Fri Aug 20 2021 Thomas Haller <thaller@redhat.com> - 1.8.32-1
+- Update to 1.8.32 release
+
 * Thu Jul 22 2021 Fedora Release Engineering <releng@fedoraproject.org> - 1.8.30-1.4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
 
