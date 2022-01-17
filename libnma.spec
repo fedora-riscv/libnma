@@ -5,18 +5,22 @@
 %global mbp_version           0.20090602
 %global old_libnma_version    1.8.27
 
-%global rpm_version 1.8.32
-%global real_version 1.8.32
+%global rpm_version 1.8.34
+%global real_version 1.8.34
 %global release_version 1
 
 %global real_version_major %(printf '%s' '%{real_version}' | sed -n 's/^\\([1-9][0-9]*\\.[1-9][0-9]*\\)\\.[1-9][0-9]*$/\\1/p')
 
+%if 0%{?fedora} >= 34 || 0%{?rhel} >= 10
+%bcond_without libnma_gtk4
+%else
 %bcond_with libnma_gtk4
+%endif
 
 Name:           libnma
 Summary:        NetworkManager GUI library
 Version:        %{rpm_version}
-Release:        %{release_version}%{?dist}.4
+Release:        %{release_version}%{?dist}
 # The entire source code is GPLv2+ except some files in shared/ which are LGPLv2+
 License:        GPLv2+ and LGPLv2+
 URL:            https://gitlab.gnome.org/GNOME/libnma/
@@ -31,10 +35,10 @@ Conflicts:      libnma < %{old_libnma_version}
 BuildRequires:  gcc
 BuildRequires:  NetworkManager-libnm-devel >= %{nm_version}
 BuildRequires:  ModemManager-glib-devel >= 1.0
-BuildRequires:  glib2-devel >= 2.32
-BuildRequires:  gtk3-devel >= 3.10
+BuildRequires:  glib2-devel >= 2.38
+BuildRequires:  gtk3-devel >= 3.12
 %if %{with libnma_gtk4}
-BuildRequires:  gtk4-devel >= 3.96
+BuildRequires:  gtk4-devel >= 4.0
 %endif
 BuildRequires:  gobject-introspection-devel >= 0.10.3
 BuildRequires:  gettext-devel
@@ -145,6 +149,10 @@ files to be used for integrating GUI tools with NetworkManager.
 
 
 %changelog
+* Wed Jan 19 2022 Lubomir Rintel <lkundrak@v3.sk> - 1.8.34-1
+- Update to 1.8.34 release
+- Enable gtk4 subpackage
+
 * Fri Aug 20 2021 Thomas Haller <thaller@redhat.com> - 1.8.32-1
 - Update to 1.8.32 release
 
