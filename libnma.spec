@@ -95,7 +95,6 @@ files to be used for integrating GUI tools with NetworkManager.
 %build
 %meson \
         -Dgcr=true \
-        -Ddisable-static=true \
         -Dvapi=false \
 %if %{with libnma_gtk4}
         -Dlibnma_gtk4=true
