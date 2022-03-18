@@ -1,0 +1,2744 @@
+From fadd3096a2f621f2aafe16543abc64179b45dcb4 Mon Sep 17 00:00:00 2001
+From: Brandon Nielsen <nielsenb@jetfuse.net>
+Date: Thu, 10 Mar 2022 20:00:23 -0600
+Subject: [PATCH] Ship and compile both GTK3 and GTK4 UI files
+
+For layouts that used to use GtkButtonBox with packing[0], the packing was
+removed because a matching layout was not immediately apparent. The UIs
+should all be checked for correctness.
+
+This is an attempt to start fixing #10, and gnome-control-center issue
+1688[1] (and matching Fedora downstream issues[2][3]).
+
+[0] - https://docs.gtk.org/gtk4/migrating-3to4.html#adapt-to-gtkcontainer-removal
+[1] - https://gitlab.gnome.org/GNOME/gnome-control-center/-/issues/1688
+[2] - https://bugzilla.redhat.com/show_bug.cgi?id=2062507
+[3] - https://bugzilla.redhat.com/show_bug.cgi?id=2060868
+---
+ Makefile.am                                   |  75 ++--
+ po/POTFILES.in                                |  51 ++-
+ src/meson.build                               |  20 +-
+ src/nma-ws/meson.build                        |  14 -
+ src/{ => ui/gtk3}/nma-bar-code-widget.ui      |   0
+ src/{ => ui/gtk3}/nma-mobile-wizard.ui        |   0
+ .../gtk3}/nma-pkcs11-cert-chooser-dialog.ui   |   0
+ .../gtk3}/nma-pkcs11-token-login-dialog.ui    |   0
+ src/{ => ui/gtk3}/nma-vpn-password-dialog.ui  |   0
+ src/{ => ui/gtk3}/nma-ws/nma-eap-fast.ui      |   0
+ src/{ => ui/gtk3}/nma-ws/nma-eap-leap.ui      |   0
+ src/{ => ui/gtk3}/nma-ws/nma-eap-peap.ui      |   0
+ src/{ => ui/gtk3}/nma-ws/nma-eap-simple.ui    |   0
+ src/{ => ui/gtk3}/nma-ws/nma-eap-tls.ui       |   0
+ src/{ => ui/gtk3}/nma-ws/nma-eap-ttls.ui      |   0
+ src/{ => ui/gtk3}/nma-ws/nma-ws-802-1x.ui     |   0
+ src/{ => ui/gtk3}/nma-ws/nma-ws-leap.ui       |   0
+ src/{ => ui/gtk3}/nma-ws/nma-ws-sae.ui        |   0
+ src/{ => ui/gtk3}/nma-ws/nma-ws-wep-key.ui    |   0
+ src/{ => ui/gtk3}/nma-ws/nma-ws-wpa-psk.ui    |   0
+ src/{ => ui/gtk3}/nma.gresource.xml           |   0
+ src/{ => ui/gtk3}/wifi.ui                     |   0
+ src/ui/gtk4/nma-bar-code-widget.ui            |  30 ++
+ src/ui/gtk4/nma-mobile-wizard.ui              | 417 ++++++++++++++++++
+ src/ui/gtk4/nma-pkcs11-cert-chooser-dialog.ui | 105 +++++
+ src/ui/gtk4/nma-pkcs11-token-login-dialog.ui  |  69 +++
+ src/ui/gtk4/nma-vpn-password-dialog.ui        | 186 ++++++++
+ src/ui/gtk4/nma-ws/nma-eap-fast.ui            | 196 ++++++++
+ src/ui/gtk4/nma-ws/nma-eap-leap.ui            |  70 +++
+ src/ui/gtk4/nma-ws/nma-eap-peap.ui            | 171 +++++++
+ src/ui/gtk4/nma-ws/nma-eap-simple.ui          | 117 +++++
+ src/ui/gtk4/nma-ws/nma-eap-tls.ui             |  77 ++++
+ src/ui/gtk4/nma-ws/nma-eap-ttls.ui            | 129 ++++++
+ src/ui/gtk4/nma-ws/nma-ws-802-1x.ui           |  62 +++
+ src/ui/gtk4/nma-ws/nma-ws-leap.ui             |  74 ++++
+ src/ui/gtk4/nma-ws/nma-ws-sae.ui              |  71 +++
+ src/ui/gtk4/nma-ws/nma-ws-wep-key.ui          | 142 ++++++
+ src/ui/gtk4/nma-ws/nma-ws-wpa-psk.ui          |  70 +++
+ src/ui/gtk4/nma.gresource.xml                 |  22 +
+ src/ui/gtk4/wifi.ui                           | 187 ++++++++
+ src/ui/meson.build                            |  11 +
+ 41 files changed, 2288 insertions(+), 78 deletions(-)
+ rename src/{ => ui/gtk3}/nma-bar-code-widget.ui (100%)
+ rename src/{ => ui/gtk3}/nma-mobile-wizard.ui (100%)
+ rename src/{ => ui/gtk3}/nma-pkcs11-cert-chooser-dialog.ui (100%)
+ rename src/{ => ui/gtk3}/nma-pkcs11-token-login-dialog.ui (100%)
+ rename src/{ => ui/gtk3}/nma-vpn-password-dialog.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-eap-fast.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-eap-leap.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-eap-peap.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-eap-simple.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-eap-tls.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-eap-ttls.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-ws-802-1x.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-ws-leap.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-ws-sae.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-ws-wep-key.ui (100%)
+ rename src/{ => ui/gtk3}/nma-ws/nma-ws-wpa-psk.ui (100%)
+ rename src/{ => ui/gtk3}/nma.gresource.xml (100%)
+ rename src/{ => ui/gtk3}/wifi.ui (100%)
+ create mode 100644 src/ui/gtk4/nma-bar-code-widget.ui
+ create mode 100644 src/ui/gtk4/nma-mobile-wizard.ui
+ create mode 100644 src/ui/gtk4/nma-pkcs11-cert-chooser-dialog.ui
+ create mode 100644 src/ui/gtk4/nma-pkcs11-token-login-dialog.ui
+ create mode 100644 src/ui/gtk4/nma-vpn-password-dialog.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-eap-fast.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-eap-leap.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-eap-peap.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-eap-simple.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-eap-tls.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-eap-ttls.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-ws-802-1x.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-ws-leap.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-ws-sae.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-ws-wep-key.ui
+ create mode 100644 src/ui/gtk4/nma-ws/nma-ws-wpa-psk.ui
+ create mode 100644 src/ui/gtk4/nma.gresource.xml
+ create mode 100644 src/ui/gtk4/wifi.ui
+ create mode 100644 src/ui/meson.build
+
+diff --git a/Makefile.am b/Makefile.am
+index b60baf41..fa371080 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -128,20 +128,17 @@ EXTRA_DIST += src/utils/meson.build
+ 
+ ###############################################################################
+ 
+-src/nma-resources.h: src/nma.gresource.xml
+-	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) $< --target=$@ --sourcedir=$(srcdir)/src --generate-header --internal
++src/nma-resources.h: src/ui/gtk3/nma.gresource.xml
++	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) $< --target=$@ --sourcedir=$(srcdir)/src/ui/gtk3 --generate-header --internal
+ 
+-src/nma-resources.c: src/nma.gresource.xml $(shell $(GLIB_COMPILE_RESOURCES) --sourcedir=$(srcdir)/src --generate-dependencies $(srcdir)/src/nma.gresource.xml)
+-	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) $< --target=$@ --sourcedir=$(srcdir)/src --generate-source --internal
++src/nma-resources.c: src/ui/gtk3/nma.gresource.xml $(shell $(GLIB_COMPILE_RESOURCES) --sourcedir=$(srcdir)/src/ui/gtk3 --generate-dependencies $(srcdir)/src/ui/gtk3/nma.gresource.xml)
++	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) $< --target=$@ --sourcedir=$(srcdir)/src/ui/gtk3 --generate-source --internal
+ 
+-src/libnma-gtk4/nma-resources.c: src/nma.gresource.xml $(shell $(GLIB_COMPILE_RESOURCES) --generate-dependencies $(srcdir)/src/nma.gresource.xml |sed "s,^,$(builddir)/src/libnma-gtk4/,")
+-	@mkdir -p $(builddir)/src/libnma-gtk4 $(builddir)/src/libnma-gtk4/nma-ws
+-	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) $< --target=$@ --sourcedir=$(builddir)/src/libnma-gtk4 --generate-source --internal
++src/libnma-gtk4/nma-resources.h: src/ui/gtk4/nma.gresource.xml
++	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) $< --target=$@ --sourcedir=$(srcdir)/src/ui/gtk4 --generate-header --internal
+ 
+-
+-src/libnma-gtk4/%.ui: src/%.ui
+-	@mkdir -p $(builddir)/src/libnma-gtk4 $(builddir)/src/libnma-gtk4/nma-ws
+-	gtk4-builder-tool simplify --3to4 $< |grep -v can.default >$@
++src/libnma-gtk4/nma-resources.c: src/ui/gtk4/nma.gresource.xml $(shell $(GLIB_COMPILE_RESOURCES) --sourcedir=$(srcdir)/src/ui/gtk4 --generate-dependencies $(srcdir)/src/ui/gtk4/nma.gresource.xml)
++	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) $< --target=$@ --sourcedir=$(srcdir)/src/ui/gtk4 --generate-source --internal
+ 
+ CLEANFILES += \
+ 	$(libnma_h_priv_gen) \
+@@ -695,28 +692,46 @@ EXTRA_DIST += \
+ 	src/libnma.ver \
+ 	src/libnma-gtk4.deps \
+ 	src/libnma.deps \
+-	src/wifi.ui \
+-	src/nma-mobile-wizard.ui \
+-	src/nma-bar-code-widget.ui \
+-	src/nma-pkcs11-token-login-dialog.ui \
+-	src/nma-pkcs11-cert-chooser-dialog.ui \
+-	src/nma-vpn-password-dialog.ui \
+-	src/nma.gresource.xml \
++	src/ui/meson.build \
++	src/ui/gtk3/wifi.ui \
++	src/ui/gtk3/nma-mobile-wizard.ui \
++	src/ui/gtk3/nma-bar-code-widget.ui \
++	src/ui/gtk3/nma-pkcs11-token-login-dialog.ui \
++	src/ui/gtk3/nma-pkcs11-cert-chooser-dialog.ui \
++	src/ui/gtk3/nma-vpn-password-dialog.ui \
++	src/ui/gtk3/nma.gresource.xml \
++	src/ui/gtk3/nma-ws/nma-eap-fast.ui \
++	src/ui/gtk3/nma-ws/nma-eap-leap.ui \
++	src/ui/gtk3/nma-ws/nma-eap-peap.ui \
++	src/ui/gtk3/nma-ws/nma-eap-simple.ui \
++	src/ui/gtk3/nma-ws/nma-eap-tls.ui \
++	src/ui/gtk3/nma-ws/nma-eap-ttls.ui \
++	src/ui/gtk3/nma-ws/nma-ws-802-1x.ui \
++	src/ui/gtk3/nma-ws/nma-ws-leap.ui \
++	src/ui/gtk3/nma-ws/nma-ws-sae.ui \
++	src/ui/gtk3/nma-ws/nma-ws-wep-key.ui \
++	src/ui/gtk3/nma-ws/nma-ws-wpa-psk.ui \
++	src/ui/gtk4/wifi.ui \
++	src/ui/gtk4/nma-mobile-wizard.ui \
++	src/ui/gtk4/nma-bar-code-widget.ui \
++	src/ui/gtk4/nma-pkcs11-token-login-dialog.ui \
++	src/ui/gtk4/nma-pkcs11-cert-chooser-dialog.ui \
++	src/ui/gtk4/nma-vpn-password-dialog.ui \
++	src/ui/gtk4/nma.gresource.xml \
++	src/ui/gtk4/nma-ws/nma-eap-fast.ui \
++	src/ui/gtk4/nma-ws/nma-eap-leap.ui \
++	src/ui/gtk4/nma-ws/nma-eap-peap.ui \
++	src/ui/gtk4/nma-ws/nma-eap-simple.ui \
++	src/ui/gtk4/nma-ws/nma-eap-tls.ui \
++	src/ui/gtk4/nma-ws/nma-eap-ttls.ui \
++	src/ui/gtk4/nma-ws/nma-ws-802-1x.ui \
++	src/ui/gtk4/nma-ws/nma-ws-leap.ui \
++	src/ui/gtk4/nma-ws/nma-ws-sae.ui \
++	src/ui/gtk4/nma-ws/nma-ws-wep-key.ui \
++	src/ui/gtk4/nma-ws/nma-ws-wpa-psk.ui \
+ 	src/meson.build \
+ 	src/tests/meson.build \
+-	\
+ 	src/nma-ws/meson.build \
+-	src/nma-ws/nma-eap-fast.ui \
+-	src/nma-ws/nma-eap-leap.ui \
+-	src/nma-ws/nma-eap-peap.ui \
+-	src/nma-ws/nma-eap-simple.ui \
+-	src/nma-ws/nma-eap-tls.ui \
+-	src/nma-ws/nma-eap-ttls.ui \
+-	src/nma-ws/nma-ws-802-1x.ui \
+-	src/nma-ws/nma-ws-leap.ui \
+-	src/nma-ws/nma-ws-sae.ui \
+-	src/nma-ws/nma-ws-wep-key.ui \
+-	src/nma-ws/nma-ws-wpa-psk.ui \
+ 	$(NULL)
+ 
+ ###############################################################################
+diff --git a/po/POTFILES.in b/po/POTFILES.in
+index 8a3b2136..87c8b2bf 100644
+--- a/po/POTFILES.in
++++ b/po/POTFILES.in
+@@ -3,45 +3,62 @@
+ org.gnome.nm-applet.gschema.xml.in
+ shared/nm-utils/nm-shared-utils.c
+ src/nma-bar-code-widget.c
+-src/nma-bar-code-widget.ui
+ src/nma-cert-chooser-button.c
+ src/nma-mobile-providers.c
+ src/nma-mobile-wizard.c
+-src/nma-mobile-wizard.ui
+ src/nma-pkcs11-cert-chooser-dialog.c
+-src/nma-pkcs11-cert-chooser-dialog.ui
+ src/nma-pkcs11-token-login-dialog.c
+-src/nma-pkcs11-token-login-dialog.ui
+ src/nma-ui-utils.c
+ src/nma-vpn-password-dialog.c
+-src/nma-vpn-password-dialog.ui
+ src/nma-wifi-dialog.c
+ src/nma-ws/nma-eap-fast.c
+-src/nma-ws/nma-eap-fast.ui
+ src/nma-ws/nma-eap-leap.c
+-src/nma-ws/nma-eap-leap.ui
+ src/nma-ws/nma-eap-peap.c
+-src/nma-ws/nma-eap-peap.ui
+ src/nma-ws/nma-eap-simple.c
+-src/nma-ws/nma-eap-simple.ui
+ src/nma-ws/nma-eap-tls.c
+-src/nma-ws/nma-eap-tls.ui
+ src/nma-ws/nma-eap-ttls.c
+-src/nma-ws/nma-eap-ttls.ui
+ src/nma-ws/nma-eap.c
+ src/nma-ws/nma-ws-802-1x.c
+-src/nma-ws/nma-ws-802-1x.ui
+ src/nma-ws/nma-ws-dynamic-wep.c
+ src/nma-ws/nma-ws-helpers.c
+ src/nma-ws/nma-ws-leap.c
+-src/nma-ws/nma-ws-leap.ui
+ src/nma-ws/nma-ws-sae.c
+-src/nma-ws/nma-ws-sae.ui
+ src/nma-ws/nma-ws-wep-key.c
+-src/nma-ws/nma-ws-wep-key.ui
+ src/nma-ws/nma-ws-wpa-eap.c
+ src/nma-ws/nma-ws-wpa-psk.c
+-src/nma-ws/nma-ws-wpa-psk.ui
+ src/nma-ws/nma-ws.c
++src/ui/gtk3/nma-bar-code-widget.ui
++src/ui/gtk3/nma-mobile-wizard.ui
++src/ui/gtk3/nma-pkcs11-cert-chooser-dialog.ui
++src/ui/gtk3/nma-pkcs11-token-login-dialog.ui
++src/ui/gtk3/nma-vpn-password-dialog.ui
++src/ui/gtk3/nma-ws/nma-eap-fast.ui
++src/ui/gtk3/nma-ws/nma-eap-leap.ui
++src/ui/gtk3/nma-ws/nma-eap-peap.ui
++src/ui/gtk3/nma-ws/nma-eap-simple.ui
++src/ui/gtk3/nma-ws/nma-eap-tls.ui
++src/ui/gtk3/nma-ws/nma-eap-ttls.ui
++src/ui/gtk3/nma-ws/nma-ws-802-1x.ui
++src/ui/gtk3/nma-ws/nma-ws-leap.ui
++src/ui/gtk3/nma-ws/nma-ws-sae.ui
++src/ui/gtk3/nma-ws/nma-ws-wep-key.ui
++src/ui/gtk3/nma-ws/nma-ws-wpa-psk.ui
++src/ui/gtk3/wifi.ui
++src/ui/gtk4/nma-bar-code-widget.ui
++src/ui/gtk4/nma-mobile-wizard.ui
++src/ui/gtk4/nma-pkcs11-cert-chooser-dialog.ui
++src/ui/gtk4/nma-pkcs11-token-login-dialog.ui
++src/ui/gtk4/nma-vpn-password-dialog.ui
++src/ui/gtk4/nma-ws/nma-eap-fast.ui
++src/ui/gtk4/nma-ws/nma-eap-leap.ui
++src/ui/gtk4/nma-ws/nma-eap-peap.ui
++src/ui/gtk4/nma-ws/nma-eap-simple.ui
++src/ui/gtk4/nma-ws/nma-eap-tls.ui
++src/ui/gtk4/nma-ws/nma-eap-ttls.ui
++src/ui/gtk4/nma-ws/nma-ws-802-1x.ui
++src/ui/gtk4/nma-ws/nma-ws-leap.ui
++src/ui/gtk4/nma-ws/nma-ws-sae.ui
++src/ui/gtk4/nma-ws/nma-ws-wep-key.ui
++src/ui/gtk4/nma-ws/nma-ws-wpa-psk.ui
++src/ui/gtk4/wifi.ui
+ src/utils/utils.c
+-src/wifi.ui
+diff --git a/src/meson.build b/src/meson.build
+index 2064ddb0..6e1a15e4 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -16,21 +16,7 @@ version_header = configure_file(
+ 
+ subdir('utils')
+ subdir('nma-ws')
+-
+-resource_data = nma_ws_resource_data + files(
+-  'nma-bar-code-widget.ui',
+-  'nma-mobile-wizard.ui',
+-  'nma-pkcs11-cert-chooser-dialog.ui',
+-  'nma-pkcs11-token-login-dialog.ui',
+-  'nma-vpn-password-dialog.ui',
+-  'wifi.ui'
+-)
+-
+-built_sources = gnome.compile_resources(
+-  'nma-resources',
+-  'nma.gresource.xml',
+-  dependencies: resource_data
+-)
++subdir('ui')
+ 
+ gir_headers = nma_ws_headers + files(
+   'nma-bar-code-widget.h',
+@@ -87,7 +73,7 @@ cflags = [
+ symbol_map = join_paths(meson.current_source_dir(), 'libnma.ver')
+ 
+ nma_deps = [ deps, gtk_dep ]
+-nma_sources = [ gir_sources, built_sources ]
++nma_sources = [ gir_sources, ui_sources ]
+ if enable_gcr
+   nma_sources += files(
+     'nma-pkcs11-cert-chooser-dialog.c',
+@@ -117,7 +103,7 @@ libnma_dep = declare_dependency(
+ if enable_libnma_gtk4
+   libnma_gtk4 = shared_library(
+     'nma-gtk4',
+-    sources: gir_sources + built_sources,
++    sources: gir_sources + ui_sources,
+     version: libversion,
+     include_directories: incs,
+     dependencies: [ deps, gtk4_dep ],
+diff --git a/src/nma-ws/meson.build b/src/nma-ws/meson.build
+index 7b94d4be..01db916e 100644
+--- a/src/nma-ws/meson.build
++++ b/src/nma-ws/meson.build
+@@ -1,19 +1,5 @@
+ nma_ws_inc = include_directories('.')
+ 
+-nma_ws_resource_data = files(
+-  'nma-eap-fast.ui',
+-  'nma-eap-leap.ui',
+-  'nma-eap-peap.ui',
+-  'nma-eap-simple.ui',
+-  'nma-eap-tls.ui',
+-  'nma-eap-ttls.ui',
+-  'nma-ws-802-1x.ui',
+-  'nma-ws-leap.ui',
+-  'nma-ws-sae.ui',
+-  'nma-ws-wep-key.ui',
+-  'nma-ws-wpa-psk.ui',
+-)
+-
+ nma_ws_headers = files(
+   'nma-ws-802-1x.h',
+   'nma-ws-dynamic-wep.h',
+diff --git a/src/nma-bar-code-widget.ui b/src/ui/gtk3/nma-bar-code-widget.ui
+similarity index 100%
+rename from src/nma-bar-code-widget.ui
+rename to src/ui/gtk3/nma-bar-code-widget.ui
+diff --git a/src/nma-mobile-wizard.ui b/src/ui/gtk3/nma-mobile-wizard.ui
+similarity index 100%
+rename from src/nma-mobile-wizard.ui
+rename to src/ui/gtk3/nma-mobile-wizard.ui
+diff --git a/src/nma-pkcs11-cert-chooser-dialog.ui b/src/ui/gtk3/nma-pkcs11-cert-chooser-dialog.ui
+similarity index 100%
+rename from src/nma-pkcs11-cert-chooser-dialog.ui
+rename to src/ui/gtk3/nma-pkcs11-cert-chooser-dialog.ui
+diff --git a/src/nma-pkcs11-token-login-dialog.ui b/src/ui/gtk3/nma-pkcs11-token-login-dialog.ui
+similarity index 100%
+rename from src/nma-pkcs11-token-login-dialog.ui
+rename to src/ui/gtk3/nma-pkcs11-token-login-dialog.ui
+diff --git a/src/nma-vpn-password-dialog.ui b/src/ui/gtk3/nma-vpn-password-dialog.ui
+similarity index 100%
+rename from src/nma-vpn-password-dialog.ui
+rename to src/ui/gtk3/nma-vpn-password-dialog.ui
+diff --git a/src/nma-ws/nma-eap-fast.ui b/src/ui/gtk3/nma-ws/nma-eap-fast.ui
+similarity index 100%
+rename from src/nma-ws/nma-eap-fast.ui
+rename to src/ui/gtk3/nma-ws/nma-eap-fast.ui
+diff --git a/src/nma-ws/nma-eap-leap.ui b/src/ui/gtk3/nma-ws/nma-eap-leap.ui
+similarity index 100%
+rename from src/nma-ws/nma-eap-leap.ui
+rename to src/ui/gtk3/nma-ws/nma-eap-leap.ui
+diff --git a/src/nma-ws/nma-eap-peap.ui b/src/ui/gtk3/nma-ws/nma-eap-peap.ui
+similarity index 100%
+rename from src/nma-ws/nma-eap-peap.ui
+rename to src/ui/gtk3/nma-ws/nma-eap-peap.ui
+diff --git a/src/nma-ws/nma-eap-simple.ui b/src/ui/gtk3/nma-ws/nma-eap-simple.ui
+similarity index 100%
+rename from src/nma-ws/nma-eap-simple.ui
+rename to src/ui/gtk3/nma-ws/nma-eap-simple.ui
+diff --git a/src/nma-ws/nma-eap-tls.ui b/src/ui/gtk3/nma-ws/nma-eap-tls.ui
+similarity index 100%
+rename from src/nma-ws/nma-eap-tls.ui
+rename to src/ui/gtk3/nma-ws/nma-eap-tls.ui
+diff --git a/src/nma-ws/nma-eap-ttls.ui b/src/ui/gtk3/nma-ws/nma-eap-ttls.ui
+similarity index 100%
+rename from src/nma-ws/nma-eap-ttls.ui
+rename to src/ui/gtk3/nma-ws/nma-eap-ttls.ui
+diff --git a/src/nma-ws/nma-ws-802-1x.ui b/src/ui/gtk3/nma-ws/nma-ws-802-1x.ui
+similarity index 100%
+rename from src/nma-ws/nma-ws-802-1x.ui
+rename to src/ui/gtk3/nma-ws/nma-ws-802-1x.ui
+diff --git a/src/nma-ws/nma-ws-leap.ui b/src/ui/gtk3/nma-ws/nma-ws-leap.ui
+similarity index 100%
+rename from src/nma-ws/nma-ws-leap.ui
+rename to src/ui/gtk3/nma-ws/nma-ws-leap.ui
+diff --git a/src/nma-ws/nma-ws-sae.ui b/src/ui/gtk3/nma-ws/nma-ws-sae.ui
+similarity index 100%
+rename from src/nma-ws/nma-ws-sae.ui
+rename to src/ui/gtk3/nma-ws/nma-ws-sae.ui
+diff --git a/src/nma-ws/nma-ws-wep-key.ui b/src/ui/gtk3/nma-ws/nma-ws-wep-key.ui
+similarity index 100%
+rename from src/nma-ws/nma-ws-wep-key.ui
+rename to src/ui/gtk3/nma-ws/nma-ws-wep-key.ui
+diff --git a/src/nma-ws/nma-ws-wpa-psk.ui b/src/ui/gtk3/nma-ws/nma-ws-wpa-psk.ui
+similarity index 100%
+rename from src/nma-ws/nma-ws-wpa-psk.ui
+rename to src/ui/gtk3/nma-ws/nma-ws-wpa-psk.ui
+diff --git a/src/nma.gresource.xml b/src/ui/gtk3/nma.gresource.xml
+similarity index 100%
+rename from src/nma.gresource.xml
+rename to src/ui/gtk3/nma.gresource.xml
+diff --git a/src/wifi.ui b/src/ui/gtk3/wifi.ui
+similarity index 100%
+rename from src/wifi.ui
+rename to src/ui/gtk3/wifi.ui
+diff --git a/src/ui/gtk4/nma-bar-code-widget.ui b/src/ui/gtk4/nma-bar-code-widget.ui
+new file mode 100644
+index 00000000..a3c97e5b
+--- /dev/null
++++ b/src/ui/gtk4/nma-bar-code-widget.ui
+@@ -0,0 +1,30 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <template class="NMABarCodeWidget" parent="GtkBox">
++    <property name="margin_start">6</property>
++    <property name="margin_end">6</property>
++    <property name="margin_top">6</property>
++    <property name="margin_bottom">6</property>
++    <property name="orientation">vertical</property>
++    <property name="spacing">6</property>
++    <child>
++      <object class="GtkAspectFrame">
++        <property name="hexpand">1</property>
++        <property name="vexpand">1</property>
++        <property name="child">
++          <object class="GtkDrawingArea" id="qr_code"/>
++        </property>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel">
++        <property name="hexpand">0</property>
++        <property name="vexpand">0</property>
++        <property name="label" translatable="yes">Scan with your phone or &lt;a href=&quot;nma:print&quot;&gt;Print&lt;/a&gt;</property>
++        <property name="use_markup">1</property>
++        <signal name="activate-link" handler="link_activated" swapped="no"/>
++      </object>
++    </child>
++  </template>
++</interface>
+diff --git a/src/ui/gtk4/nma-mobile-wizard.ui b/src/ui/gtk4/nma-mobile-wizard.ui
+new file mode 100644
+index 00000000..f1264e9e
+--- /dev/null
++++ b/src/ui/gtk4/nma-mobile-wizard.ui
+@@ -0,0 +1,417 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkTreeStore" id="country_store">
++    <columns>
++      <column type="gchararray"/>
++      <column type="NMACountryInfo"/>
++    </columns>
++  </object>
++  <object class="GtkTreeModelSort" id="country_sort">
++    <property name="model">country_store</property>
++  </object>
++  <object class="GtkTreeStore" id="dev_store">
++    <columns>
++      <column type="gchararray"/>
++      <column type="NMDevice"/>
++      <column type="gboolean"/>
++    </columns>
++  </object>
++  <object class="GtkTreeStore" id="plan_store">
++    <columns>
++      <column type="gchararray"/>
++      <column type="NMAMobileAccessMethod"/>
++      <column type="gboolean"/>
++    </columns>
++  </object>
++  <object class="GtkTreeStore" id="providers_store">
++    <columns>
++      <column type="gchararray"/>
++      <column type="NMAMobileProvider"/>
++    </columns>
++  </object>
++  <object class="GtkTreeModelSort" id="providers_sort">
++    <property name="model">providers_store</property>
++  </object>
++  <object class="GtkAssistant" id="assistant">
++    <property name="title" translatable="yes">New Mobile Broadband Connection</property>
++    <property name="modal">1</property>
++    <property name="use_header_bar">1</property>
++    <signal name="cancel" handler="assistant_cancel" swapped="no"/>
++    <signal name="close" handler="assistant_closed" swapped="no"/>
++    <signal name="prepare" handler="assistant_prepare" swapped="no"/>
++    <child>
++      <object class="GtkAssistantPage">
++        <property name="page_type">intro</property>
++        <property name="title" translatable="yes">Set up a Mobile Broadband Connection</property>
++        <property name="complete">1</property>
++        <property name="child">
++          <object class="GtkBox" id="intro_page">
++            <property name="visible">0</property>
++            <property name="margin_start">12</property>
++            <property name="margin_end">12</property>
++            <property name="margin_top">12</property>
++            <property name="margin_bottom">12</property>
++            <property name="orientation">vertical</property>
++            <property name="spacing">6</property>
++            <child>
++              <object class="GtkLabel">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">This assistant helps you easily set up a mobile broadband connection to a cellular (3G) network.</property>
++                <property name="wrap">1</property>
++                <property name="max_width_chars">60</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">You will need the following information:</property>
++                <property name="wrap">1</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="provider_name_label">
++                <property name="visible">0</property>
++                <property name="margin_start">25</property>
++                <property name="label" translatable="yes">Your broadband provider’s name</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="plan_name_label">
++                <property name="visible">0</property>
++                <property name="margin_start">25</property>
++                <property name="label" translatable="yes">Your broadband billing plan name</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="apn_label">
++                <property name="visible">0</property>
++                <property name="margin_start">25</property>
++                <property name="label" translatable="yes">(in some cases) Your broadband billing plan APN (Access Point Name)</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="dev_combo_label">
++                <property name="visible">0</property>
++                <property name="valign">end</property>
++                <property name="vexpand">1</property>
++                <property name="label" translatable="yes">Create a connection for _this mobile broadband device:</property>
++                <property name="use_underline">1</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkComboBox" id="dev_combo">
++                <property name="visible">0</property>
++                <property name="sensitive">0</property>
++                <property name="model">dev_store</property>
++                <property name="active">0</property>
++                <signal name="changed" handler="intro_combo_changed" swapped="yes"/>
++              </object>
++            </child>
++          </object>
++        </property>
++      </object>
++    </child>
++    <child>
++      <object class="GtkAssistantPage">
++        <property name="title" translatable="yes">Choose your Provider’s Country or Region</property>
++        <property name="child">
++          <object class="GtkBox" id="country_page">
++            <property name="visible">0</property>
++            <property name="margin_start">12</property>
++            <property name="margin_end">12</property>
++            <property name="margin_top">12</property>
++            <property name="margin_bottom">12</property>
++            <property name="orientation">vertical</property>
++            <property name="spacing">6</property>
++            <child>
++              <object class="GtkLabel">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">Country or region:</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkScrolledWindow">
++                <property name="visible">0</property>
++                <property name="focusable">1</property>
++                <property name="vexpand">1</property>
++                <property name="hscrollbar_policy">never</property>
++                <property name="child">
++                  <object class="GtkTreeView" id="country_view">
++                    <property name="visible">0</property>
++                    <property name="focusable">1</property>
++                    <property name="hexpand">1</property>
++                    <property name="vexpand">1</property>
++                    <property name="model">country_sort</property>
++                    <property name="headers_visible">0</property>
++                    <property name="search_column">0</property>
++                    <signal name="row-activated" handler="country_update_continue" swapped="yes"/>
++                    <child internal-child="selection">
++                      <object class="GtkTreeSelection"/>
++                    </child>
++                  </object>
++                </property>
++              </object>
++            </child>
++          </object>
++        </property>
++      </object>
++    </child>
++    <child>
++      <object class="GtkAssistantPage">
++        <property name="title" translatable="yes">Choose your Provider</property>
++        <property name="child">
++          <object class="GtkBox" id="providers_page">
++            <property name="visible">0</property>
++            <property name="margin_start">12</property>
++            <property name="margin_end">12</property>
++            <property name="margin_top">12</property>
++            <property name="margin_bottom">12</property>
++            <property name="orientation">vertical</property>
++            <property name="spacing">6</property>
++            <child>
++              <object class="GtkCheckButton" id="providers_view_radio">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">Select your provider from a _list:</property>
++                <property name="use_underline">1</property>
++                <property name="active">1</property>
++                <signal name="toggled" handler="providers_radio_toggled" swapped="no"/>
++              </object>
++            </child>
++            <child>
++              <object class="GtkScrolledWindow">
++                <property name="visible">0</property>
++                <property name="height_request">140</property>
++                <property name="focusable">1</property>
++                <property name="margin_start">25</property>
++                <property name="vexpand">1</property>
++                <property name="hscrollbar_policy">never</property>
++                <property name="child">
++                  <object class="GtkTreeView" id="providers_view">
++                    <property name="visible">0</property>
++                    <property name="focusable">1</property>
++                    <property name="model">providers_sort</property>
++                    <property name="search_column">0</property>
++                    <signal name="row-activated" handler="providers_update_continue" swapped="yes"/>
++                    <child internal-child="selection">
++                      <object class="GtkTreeSelection"/>
++                    </child>
++                  </object>
++                </property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkCheckButton" id="provider_unlisted_radio">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">I can’t find my provider and I wish to set up the connection _manually:</property>
++                <property name="use_underline">1</property>
++                <property name="group">providers_view_radio</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkComboBoxText" id="provider_unlisted_type_combo">
++                <property name="visible">0</property>
++                <property name="margin_start">25</property>
++                <property name="active">0</property>
++                <items>
++                  <item id="0" translatable="yes">My provider uses GSM technology (GPRS, EDGE, UMTS, HSPA)</item>
++                  <item id="1" translatable="yes">My provider uses CDMA technology (1xRTT, EVDO)</item>
++                </items>
++              </object>
++            </child>
++          </object>
++        </property>
++      </object>
++    </child>
++    <child>
++      <object class="GtkAssistantPage">
++        <property name="title" translatable="yes">Choose your Billing Plan</property>
++        <property name="child">
++          <object class="GtkBox" id="plan_page">
++            <property name="visible">0</property>
++            <property name="margin_start">12</property>
++            <property name="margin_end">12</property>
++            <property name="margin_top">12</property>
++            <property name="margin_bottom">12</property>
++            <property name="orientation">vertical</property>
++            <property name="spacing">6</property>
++            <child>
++              <object class="GtkLabel">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">_Select your plan:</property>
++                <property name="use_underline">1</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkComboBox" id="plan_combo">
++                <property name="visible">0</property>
++                <property name="model">plan_store</property>
++                <signal name="changed" handler="plan_combo_changed" swapped="yes"/>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">Selected plan _APN (Access Point Name):</property>
++                <property name="use_underline">1</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkEntry" id="plan_apn_entry">
++                <property name="visible">0</property>
++                <property name="focusable">1</property>
++                <property name="max_length">64</property>
++                <signal name="changed" handler="plan_update_complete" swapped="yes"/>
++                <signal name="insert-text" handler="apn_filter_cb" swapped="no"/>
++              </object>
++            </child>
++            <child>
++              <object class="GtkBox">
++                <property name="visible">0</property>
++                <property name="valign">end</property>
++                <property name="vexpand">1</property>
++                <property name="spacing">6</property>
++                <child>
++                  <object class="GtkImage">
++                    <property name="visible">0</property>
++                    <property name="valign">start</property>
++                    <property name="icon_name">dialog-warning</property>
++                    <property name="icon_size">6</property>
++                  </object>
++                </child>
++                <child>
++                  <object class="GtkLabel">
++                    <property name="visible">0</property>
++                    <property name="width_request">500</property>
++                    <property name="label" translatable="yes">Warning: Selecting an incorrect plan may result in billing issues for your broadband account or may prevent connectivity.
++
++If you are unsure of your plan please ask your provider for your plan’s APN.</property>
++                    <property name="wrap">1</property>
++                    <property name="max_width_chars">60</property>
++                  </object>
++                </child>
++              </object>
++            </child>
++          </object>
++        </property>
++      </object>
++    </child>
++    <child>
++      <object class="GtkAssistantPage">
++        <property name="page_type">confirm</property>
++        <property name="title" translatable="yes">Confirm Mobile Broadband Settings</property>
++        <property name="complete">1</property>
++        <property name="child">
++          <object class="GtkBox" id="confirm_page">
++            <property name="visible">0</property>
++            <property name="margin_start">12</property>
++            <property name="margin_end">12</property>
++            <property name="margin_top">12</property>
++            <property name="margin_bottom">12</property>
++            <property name="orientation">vertical</property>
++            <property name="spacing">6</property>
++            <child>
++              <object class="GtkLabel">
++                <property name="visible">0</property>
++                <property name="width_request">500</property>
++                <property name="label" translatable="yes">Your mobile broadband connection is configured with the following settings:</property>
++                <property name="wrap">1</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="confirm_device_label">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">Your Device:</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="confirm_device">
++                <property name="visible">0</property>
++                <property name="margin_start">25</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">Your Provider:</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="confirm_provider">
++                <property name="visible">0</property>
++                <property name="margin_start">25</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="confirm_plan_label">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">Your Plan:</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkBox">
++                <property name="visible">0</property>
++                <property name="orientation">vertical</property>
++                <property name="spacing">6</property>
++                <child>
++                  <object class="GtkLabel" id="confirm_plan">
++                    <property name="visible">0</property>
++                    <property name="margin_start">25</property>
++                    <property name="xalign">0</property>
++                  </object>
++                </child>
++                <child>
++                  <object class="GtkLabel" id="confirm_apn">
++                    <property name="visible">0</property>
++                    <property name="margin_start">25</property>
++                    <property name="xalign">0</property>
++                  </object>
++                </child>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="confirm_connect_after_label">
++                <property name="visible">0</property>
++                <property name="width_request">500</property>
++                <property name="valign">end</property>
++                <property name="vexpand">1</property>
++                <property name="label" translatable="yes">A connection will now be made to your mobile broadband provider using the settings you selected. If the connection fails or you cannot access network resources, double-check your settings. To modify your mobile broadband connection settings, choose “Network Connections” from the System → Preferences menu.</property>
++                <property name="wrap">1</property>
++                <property name="max_width_chars">60</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++          </object>
++        </property>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++    <child internal-child="action_area">
++      <object class="GtkAssistantPage">
++        <property name="child">
++          <object class="GtkBox">
++            <property name="visible">0</property>
++          </object>
++        </property>
++      </object>
++    </child>
++  </object>
++</interface>
+diff --git a/src/ui/gtk4/nma-pkcs11-cert-chooser-dialog.ui b/src/ui/gtk4/nma-pkcs11-cert-chooser-dialog.ui
+new file mode 100644
+index 00000000..0327dea3
+--- /dev/null
++++ b/src/ui/gtk4/nma-pkcs11-cert-chooser-dialog.ui
+@@ -0,0 +1,105 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="gtk30">
++  <requires lib="gtk" version="4.0"/>
++  <requires lib="gtk" version="4.0"/>
++  <template class="NMAPkcs11CertChooserDialog" parent="GtkDialog">
++    <property name="accessible_role">NMAPkcs11CertChooserDialog</property>
++    <child internal-child="content_area">
++      <object class="GtkBox" id="dialog-vbox1">
++        <property name="visible">0</property>
++        <property name="orientation">vertical</property>
++        <child>
++          <object class="GtkBox">
++            <property name="visible">0</property>
++            <property name="vexpand">1</property>
++            <property name="orientation">vertical</property>
++            <child>
++              <object class="GtkRevealer" id="error_revealer">
++                <property name="visible">0</property>
++                <property name="child">
++                  <object class="GtkInfoBar" id="error_bar">
++                    <property name="visible">0</property>
++                    <property name="message_type">error</property>
++                    <property name="show_close_button">1</property>
++                    <signal name="response" handler="error_close" swapped="no"/>
++                    <child internal-child="action_area">
++                      <object class="GtkBox">
++                        <property name="visible">0</property>
++                      </object>
++                    </child>
++                    <child internal-child="content_area">
++                      <object class="GtkBox">
++                        <property name="visible">0</property>
++                        <child>
++                          <object class="GtkLabel" id="error_label">
++                            <property name="visible">0</property>
++                          </object>
++                        </child>
++                      </object>
++                    </child>
++                  </object>
++                </property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkScrolledWindow">
++                <property name="visible">0</property>
++                <property name="vexpand">1</property>
++                <property name="width_request">300</property>
++                <property name="height_request">200</property>
++                <property name="hscrollbar_policy">never</property>
++                <property name="child">
++                  <object class="GtkTreeView" id="objects_view">
++                    <property name="visible">0</property>
++                    <property name="enable_search">0</property>
++                    <signal name="cursor-changed" handler="cursor_changed" swapped="no"/>
++                    <signal name="row-activated" handler="row_activated" swapped="no"/>
++                    <child internal-child="selection">
++                      <object class="GtkTreeSelection" id="objects_view_selection"/>
++                    </child>
++                    <child>
++                      <object class="GtkTreeViewColumn" id="list_name_column">
++                        <property name="title" translatable="yes">Name</property>
++                        <child>
++                          <object class="GtkCellRendererText" id="list_name_renderer">
++                            <property name="xpad">6</property>
++                          </object>
++                        </child>
++                      </object>
++                    </child>
++                    <child>
++                      <object class="GtkTreeViewColumn" id="list_issued_by_column">
++                        <property name="title" translatable="yes">Issued By</property>
++                        <child>
++                          <object class="GtkCellRendererText" id="list_issued_by_renderer">
++                            <property name="xpad">6</property>
++                          </object>
++                        </child>
++                      </object>
++                    </child>
++                  </object>
++                </property>
++              </object>
++            </child>
++          </object>
++        </child>
++      </object>
++    </child>
++    <child internal-child="action_area">
++      <object class="GtkBox" id="dialog-action_area1">
++        <property name="visible">0</property>
++        <property name="valign">center</property>
++        <child>
++          <object class="GtkButton" id="login_button">
++            <property name="visible">0</property>
++            <property name="label" translatable="yes">_Unlock token</property>
++            <property name="focusable">1</property>
++            <property name="receives_default">1</property>
++            <property name="use_underline">1</property>
++            <signal name="clicked" handler="login_clicked" swapped="no"/>
++          </object>
++        </child>
++      </object>
++    </child>
++  </template>
++</interface>
+diff --git a/src/ui/gtk4/nma-pkcs11-token-login-dialog.ui b/src/ui/gtk4/nma-pkcs11-token-login-dialog.ui
+new file mode 100644
+index 00000000..f095361b
+--- /dev/null
++++ b/src/ui/gtk4/nma-pkcs11-token-login-dialog.ui
+@@ -0,0 +1,69 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <requires lib="gtk" version="4.0"/>
++  <template class="NMAPkcs11TokenLoginDialog" parent="GtkDialog">
++    <child internal-child="content_area">
++      <object class="GtkBox">
++        <property name="visible">0</property>
++        <property name="orientation">vertical</property>
++        <property name="spacing">2</property>
++        <child>
++          <object class="GtkBox">
++            <property name="visible">0</property>
++            <property name="margin_start">12</property>
++            <property name="margin_end">12</property>
++            <property name="margin_top">12</property>
++            <property name="margin_bottom">12</property>
++            <property name="orientation">vertical</property>
++            <child>
++              <object class="GtkEntry" id="pin_entry">
++                <property name="visible">0</property>
++                <property name="focusable">1</property>
++                <property name="visibility">0</property>
++                <property name="input_purpose">password</property>
++                <signal name="activate" handler="pin_activate" swapped="no"/>
++                <signal name="changed" handler="pin_changed" swapped="no"/>
++              </object>
++            </child>
++            <child>
++              <object class="GtkCheckButton" id="remember">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">_Remember PIN</property>
++                <property name="focusable">1</property>
++                <property name="halign">start</property>
++                <property name="use_underline">1</property>
++              </object>
++            </child>
++          </object>
++        </child>
++      </object>
++    </child>
++    <action-widgets>
++      <action-widget response="-6">cancel</action-widget>
++      <action-widget response="-3">login</action-widget>
++    </action-widgets>
++    <child internal-child="action_area">
++      <object class="GtkBox">
++        <property name="visible">0</property>
++        <property name="valign">center</property>
++        <child>
++          <object class="GtkButton" id="cancel">
++            <property name="hexpand">1</property>
++            <property name="visible">0</property>
++            <property name="label" translatable="yes">_Cancel</property>
++            <property name="use_underline">1</property>
++          </object>
++        </child>
++        <child>
++          <object class="GtkButton" id="login">
++            <property name="hexpand">1</property>
++            <property name="visible">0</property>
++            <property name="label" translatable="yes">_Login</property>
++            <property name="use_underline">1</property>
++          </object>
++        </child>
++      </object>
++    </child>
++  </template>
++</interface>
+diff --git a/src/ui/gtk4/nma-vpn-password-dialog.ui b/src/ui/gtk4/nma-vpn-password-dialog.ui
+new file mode 100644
+index 00000000..e94fc92d
+--- /dev/null
++++ b/src/ui/gtk4/nma-vpn-password-dialog.ui
+@@ -0,0 +1,186 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <template class="NMAVpnPasswordDialog" parent="GtkDialog">
++    <property name="resizable">0</property>
++    <property name="modal">1</property>
++    <signal name="close" handler="dialog_close_callback" swapped="no"/>
++    <signal name="show" handler="dialog_show_callback" swapped="no"/>
++    <signal name="response" handler="dialog_response_callback" swapped="no"/>
++    <child internal-child="content_area">
++      <object class="GtkBox">
++        <property name="orientation">vertical</property>
++        <child>
++          <object class="GtkGrid">
++            <property name="margin_start">12</property>
++            <property name="margin_end">12</property>
++            <property name="margin_top">12</property>
++            <property name="margin_bottom">12</property>
++            <property name="row_spacing">6</property>
++            <property name="column_spacing">12</property>
++            <child>
++              <object class="GtkCheckButton" id="show_passwords_checkbox">
++                <property name="label" translatable="yes">Sh_ow passwords</property>
++                <property name="focusable">1</property>
++                <property name="use_underline">1</property>
++                <property name="halign">start</property>
++                <signal name="toggled" handler="show_passwords_toggled_cb" swapped="no"/>
++                <layout>
++                  <property name="column">2</property>
++                  <property name="row">4</property>
++                </layout>
++              </object>
++            </child>
++            <child>
++              <object class="GtkEntry" id="password_entry_tertiary">
++                <property name="visible">0</property>
++                <property name="focusable">1</property>
++                <property name="visibility">0</property>
++                <property name="width_chars">20</property>
++                <signal name="activate" handler="entry_activate_cb"/>
++                <layout>
++                  <property name="column">2</property>
++                  <property name="row">3</property>
++                </layout>
++              </object>
++            </child>
++            <child>
++              <object class="GtkEntry" id="password_entry_secondary">
++                <property name="visible">0</property>
++                <property name="focusable">1</property>
++                <property name="visibility">0</property>
++                <property name="width_chars">20</property>
++                <signal name="activate" handler="entry_activate_cb"/>
++                <layout>
++                  <property name="column">2</property>
++                  <property name="row">2</property>
++                </layout>
++              </object>
++            </child>
++            <child>
++              <object class="GtkEntry" id="password_entry">
++                <property name="focusable">1</property>
++                <property name="visibility">0</property>
++                <property name="width_chars">20</property>
++                <signal name="activate" handler="entry_activate_cb"/>
++                <layout>
++                  <property name="column">2</property>
++                  <property name="row">1</property>
++                </layout>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="password_label_tertiary">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">_Tertiary Password:</property>
++                <property name="use_underline">1</property>
++                <property name="mnemonic_widget">password_entry_tertiary</property>
++                <property name="xalign">0</property>
++                <layout>
++                  <property name="column">1</property>
++                  <property name="row">3</property>
++                </layout>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="password_label_secondary">
++                <property name="visible">0</property>
++                <property name="label" translatable="yes">_Secondary Password:</property>
++                <property name="use_underline">1</property>
++                <property name="mnemonic_widget">password_entry_secondary</property>
++                <property name="xalign">0</property>
++                <layout>
++                  <property name="column">1</property>
++                  <property name="row">2</property>
++                </layout>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="password_label">
++                <property name="label" translatable="yes">_Password:</property>
++                <property name="use_underline">1</property>
++                <property name="mnemonic_widget">password_entry</property>
++                <property name="xalign">0</property>
++                <layout>
++                  <property name="column">1</property>
++                  <property name="row">1</property>
++                </layout>
++              </object>
++            </child>
++            <child>
++              <object class="GtkLabel" id="message_label">
++                <property name="visible">0</property>
++                <property name="halign">start</property>
++                <property name="margin_bottom">12</property>
++                <property name="hexpand">1</property>
++                <property name="wrap">1</property>
++                <property name="max_width_chars">35</property>
++                <layout>
++                  <property name="column">1</property>
++                  <property name="row">0</property>
++                  <property name="column-span">2</property>
++                </layout>
++              </object>
++            </child>
++            <child>
++              <object class="GtkImage">
++                <property name="margin_start">6</property>
++                <property name="margin_end">12</property>
++                <property name="margin_top">6</property>
++                <property name="margin_bottom">6</property>
++                <property name="valign">start</property>
++                <property name="icon_name">dialog-password</property>
++                <property name="icon_size">6</property>
++                <layout>
++                  <property name="column">0</property>
++                  <property name="row">0</property>
++                  <property name="row-span">5</property>
++                </layout>
++              </object>
++            </child>
++            <child>
++              <placeholder/>
++            </child>
++          </object>
++        </child>
++      </object>
++    </child>
++    <action-widgets>
++      <action-widget response="-6">cancel_button</action-widget>
++      <action-widget response="-5">ok_button</action-widget>
++    </action-widgets>
++    <child>
++      <placeholder/>
++    </child>
++    <child internal-child="action_area">
++      <object class="GtkBox">
++        <property name="valign">center</property>
++        <property name="spacing">6</property>
++        <property name="margin_start">6</property>
++        <property name="margin_end">6</property>
++        <property name="margin_top">6</property>
++        <property name="margin_bottom">6</property>
++        <child>
++          <object class="GtkButton" id="cancel_button">
++            <property name="hexpand">1</property>
++            <property name="label" translatable="yes">_Cancel</property>
++            <property name="focusable">1</property>
++            <property name="receives_default">1</property>
++            <property name="valign">baseline</property>
++            <property name="use_underline">1</property>
++          </object>
++        </child>
++        <child>
++          <object class="GtkButton" id="ok_button">
++            <property name="hexpand">1</property>
++            <property name="label" translatable="yes">_OK</property>
++            <property name="focusable">1</property>
++            <property name="receives_default">1</property>
++            <property name="valign">baseline</property>
++            <property name="use_underline">1</property>
++          </object>
++        </child>
++      </object>
++    </child>
++  </template>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-eap-fast.ui b/src/ui/gtk4/nma-ws/nma-eap-fast.ui
+new file mode 100644
+index 00000000..1c3621cc
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-eap-fast.ui
+@@ -0,0 +1,196 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkFileChooserDialog" id="eap_fast_pac_file_chooser">
++    <action-widgets>
++      <action-widget response="-6">cancel_button</action-widget>
++      <action-widget response="-3">open_button</action-widget>
++    </action-widgets>
++    <child type="titlebar">
++      <object class="GtkHeaderBar">
++        <child type="title">
++          <object class="GtkLabel">
++            <property name="label" translatable="yes">Choose a PAC file</property>
++            <style>
++              <class name="title"/>
++            </style>
++          </object>
++        </child>
++        <child>
++          <object class="GtkButton" id="cancel_button">
++            <property name="label" translatable="yes">_Cancel</property>
++            <property name="focusable">1</property>
++            <property name="receives-default">1</property>
++            <property name="use-underline">1</property>
++          </object>
++        </child>
++        <child type="end">
++          <object class="GtkButton" id="open_button">
++            <property name="label" translatable="yes">_Open</property>
++            <property name="focusable">1</property>
++            <property name="receives-default">1</property>
++            <property name="use-underline">1</property>
++            <style>
++              <class name="default"/>
++              <class name="suggested-action"/>
++            </style>
++          </object>
++        </child>
++      </object>
++    </child>
++  </object>
++  <object class="GtkListStore" id="model8">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0"> </col>
++      </row>
++    </data>
++  </object>
++  <object class="GtkListStore" id="model9">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0" translatable="yes">Anonymous</col>
++      </row>
++      <row>
++        <col id="0" translatable="yes">Authenticated</col>
++      </row>
++      <row>
++        <col id="0" translatable="yes">Both</col>
++      </row>
++    </data>
++  </object>
++  <object class="GtkGrid" id="eap_fast_grid">
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="eap_fast_anon_identity_label">
++        <property name="label" translatable="yes">Anony_mous identity</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_fast_anon_identity_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_fast_anon_identity_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_fast_pac_file_label">
++        <property name="label" translatable="yes">PAC _file</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_fast_pac_file_button</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkButton" id="eap_fast_pac_file_button">
++        <child>
++          <object class="GtkBox">
++            <child>
++              <object class="GtkLabel" id="eap_fast_pac_file_button_label">
++                <property name="hexpand">1</property>
++                <property name="xalign">0</property>
++              </object>
++            </child>
++            <child>
++              <object class="GtkImage">
++                <property name="icon-name">document-open-symbolic</property>
++              </object>
++            </child>
++          </object>
++        </child>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkBox" id="eap_fast_inner_auth_vbox">
++        <property name="orientation">vertical</property>
++        <child>
++          <placeholder/>
++        </child>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">4</property>
++          <property name="column-span">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_fast_inner_auth_label">
++        <property name="label" translatable="yes">_Inner authentication</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_fast_inner_auth_combo</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">3</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="eap_fast_inner_auth_combo">
++        <property name="model">model8</property>
++        <child>
++          <object class="GtkCellRendererText" id="renderer8"/>
++          <attributes>
++            <attribute name="text">0</attribute>
++          </attributes>
++        </child>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">3</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="eap_fast_pac_provision_checkbutton">
++        <property name="label" translatable="yes">Allow automatic PAC pro_visioning</property>
++        <property name="focusable">1</property>
++        <property name="use_underline">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="eap_fast_pac_provision_combo">
++        <property name="model">model9</property>
++        <child>
++          <object class="GtkCellRendererText" id="renderer9"/>
++          <attributes>
++            <attribute name="text">0</attribute>
++          </attributes>
++        </child>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++  </object>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-eap-leap.ui b/src/ui/gtk4/nma-ws/nma-eap-leap.ui
+new file mode 100644
+index 00000000..89f6f4f2
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-eap-leap.ui
+@@ -0,0 +1,70 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkGrid" id="eap_leap_grid">
++    <property name="valign">start</property>
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="eap_leap_username_label">
++        <property name="label" translatable="yes">_Username</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_leap_username_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_leap_password_label">
++        <property name="label" translatable="yes">_Password</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_leap_password_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_leap_password_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="visibility">0</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="show_checkbutton_eapleap">
++        <property name="label" translatable="yes">Sho_w password</property>
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="use_underline">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_leap_username_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++  </object>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-eap-peap.ui b/src/ui/gtk4/nma-ws/nma-eap-peap.ui
+new file mode 100644
+index 00000000..2673f9ed
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-eap-peap.ui
+@@ -0,0 +1,171 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkListStore" id="model8">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0"> </col>
++      </row>
++    </data>
++  </object>
++  <object class="GtkListStore" id="model9">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0" translatable="yes">Automatic</col>
++      </row>
++      <row>
++        <col id="0" translatable="yes">Version 0</col>
++      </row>
++      <row>
++        <col id="0" translatable="yes">Version 1</col>
++      </row>
++    </data>
++  </object>
++  <object class="GtkGrid" id="eap_peap_grid">
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="eap_peap_anon_identity_label">
++        <property name="label" translatable="yes">Anony_mous identity</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_peap_anon_identity_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_peap_anon_identity_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="eap_peap_ca_cert_not_required_checkbox">
++        <property name="label" translatable="yes">No CA certificate is _required</property>
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="use_underline">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">3</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_peap_version_label">
++        <property name="label" translatable="yes">PEAP _version</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_peap_version_combo</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">4</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="eap_peap_version_combo">
++        <property name="hexpand">1</property>
++        <property name="model">model9</property>
++        <child>
++          <object class="GtkCellRendererText" id="renderer9"/>
++          <attributes>
++            <attribute name="text">0</attribute>
++          </attributes>
++        </child>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">4</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_peap_inner_auth_label">
++        <property name="label" translatable="yes">_Inner authentication</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_peap_inner_auth_combo</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">5</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="eap_peap_inner_auth_combo">
++        <property name="hexpand">1</property>
++        <property name="model">model8</property>
++        <child>
++          <object class="GtkCellRendererText" id="renderer8"/>
++          <attributes>
++            <attribute name="text">0</attribute>
++          </attributes>
++        </child>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">5</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkBox" id="eap_peap_inner_auth_vbox">
++        <property name="orientation">vertical</property>
++        <child>
++          <placeholder/>
++        </child>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">6</property>
++          <property name="column-span">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_peap_domain_label">
++        <property name="tooltip_text" translatable="yes">Suffix of the server certificate name.</property>
++        <property name="label" translatable="yes">_Domain</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_peap_domain_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_peap_domain_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++  </object>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-eap-simple.ui b/src/ui/gtk4/nma-ws/nma-eap-simple.ui
+new file mode 100644
+index 00000000..fab6fdb0
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-eap-simple.ui
+@@ -0,0 +1,117 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkGrid" id="eap_simple_grid">
++    <property name="valign">start</property>
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="eap_simple_username_label">
++        <property name="label" translatable="yes">_Username</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_simple_username_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_simple_password_label">
++        <property name="label" translatable="yes">_Password</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_simple_password_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_simple_password_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="visibility">0</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_simple_username_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkBox" id="vbox5">
++        <property name="orientation">vertical</property>
++        <child>
++          <object class="GtkCheckButton" id="show_checkbutton_eapsimple">
++            <property name="vexpand">1</property>
++            <property name="label" translatable="yes">Sho_w password</property>
++            <property name="focusable">1</property>
++            <property name="use_underline">1</property>
++          </object>
++        </child>
++        <child>
++          <placeholder/>
++        </child>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_simple_pkey_passphrase_label">
++        <property name="label" translatable="yes">P_rivate Key Passphrase</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_simple_pkey_passphrase_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">3</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_simple_pkey_passphrase_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="visibility">0</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">3</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="eap_simple_show_pkey_passphrase_checkbutton">
++        <property name="label" translatable="yes">Sh_ow passphrase</property>
++        <property name="focusable">1</property>
++        <property name="use_underline">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">4</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++  </object>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-eap-tls.ui b/src/ui/gtk4/nma-ws/nma-eap-tls.ui
+new file mode 100644
+index 00000000..07126fb9
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-eap-tls.ui
+@@ -0,0 +1,77 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkGrid" id="eap_tls_grid">
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="eap_tls_identity_label">
++        <property name="label" translatable="yes">I_dentity</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_tls_identity_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_tls_identity_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="eap_tls_ca_cert_not_required_checkbox">
++        <property name="label" translatable="yes">No CA certificate is _required</property>
++        <property name="focusable">1</property>
++        <property name="halign">start</property>
++        <property name="hexpand">1</property>
++        <property name="use_underline">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">3</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_tls_domain_label">
++        <property name="tooltip_text" translatable="yes">Suffix of the server certificate name.</property>
++        <property name="label" translatable="yes">_Domain</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_tls_domain_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_tls_domain_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++  </object>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-eap-ttls.ui b/src/ui/gtk4/nma-ws/nma-eap-ttls.ui
+new file mode 100644
+index 00000000..04f726c6
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-eap-ttls.ui
+@@ -0,0 +1,129 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkListStore" id="model6">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0"> </col>
++      </row>
++    </data>
++  </object>
++  <object class="GtkGrid" id="eap_ttls_grid">
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkEntry" id="eap_ttls_anon_identity_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkBox" id="eap_ttls_inner_auth_vbox">
++        <property name="orientation">vertical</property>
++        <property name="spacing">6</property>
++        <child>
++          <placeholder/>
++        </child>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">5</property>
++          <property name="column-span">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="eap_ttls_inner_auth_combo">
++        <property name="hexpand">1</property>
++        <property name="model">model6</property>
++        <child>
++          <object class="GtkCellRendererText" id="renderer6"/>
++          <attributes>
++            <attribute name="text">0</attribute>
++          </attributes>
++        </child>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">4</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_ttls_inner_auth_label">
++        <property name="label" translatable="yes">_Inner authentication</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_ttls_inner_auth_combo</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">4</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="eap_ttls_ca_cert_not_required_checkbox">
++        <property name="label" translatable="yes">No CA certificate is _required</property>
++        <property name="focusable">1</property>
++        <property name="halign">start</property>
++        <property name="hexpand">1</property>
++        <property name="use_underline">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">3</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="eap_ttls_domain_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="activates_default">1</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_ttls_anon_identity_label">
++        <property name="label" translatable="yes">Anony_mous identity</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_ttls_anon_identity_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="eap_ttls_domain_label">
++        <property name="tooltip_text" translatable="yes">Suffix of the server certificate name.</property>
++        <property name="label" translatable="yes">_Domain</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_ttls_domain_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++  </object>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-ws-802-1x.ui b/src/ui/gtk4/nma-ws/nma-ws-802-1x.ui
+new file mode 100644
+index 00000000..8baaab99
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-ws-802-1x.ui
+@@ -0,0 +1,62 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkListStore" id="model5">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0"> </col>
++      </row>
++    </data>
++  </object>
++  <template class="NMAWs8021x" parent="GtkGrid">
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="eap_auth_label">
++        <property name="label" translatable="yes">Au_thentication</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">eap_auth_combo</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="eap_auth_combo">
++        <property name="hexpand">1</property>
++        <property name="model">model5</property>
++        <child>
++          <object class="GtkCellRendererText" id="renderer5"/>
++          <attributes>
++            <attribute name="text">0</attribute>
++          </attributes>
++        </child>
++        <signal name="changed" handler="auth_combo_changed_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkBox" id="eap_vbox">
++        <property name="hexpand">1</property>
++        <property name="orientation">vertical</property>
++        <property name="spacing">6</property>
++        <child>
++          <placeholder/>
++        </child>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">1</property>
++          <property name="column-span">2</property>
++        </layout>
++      </object>
++    </child>
++  </template>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-ws-leap.ui b/src/ui/gtk4/nma-ws/nma-ws-leap.ui
+new file mode 100644
+index 00000000..167ecc68
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-ws-leap.ui
+@@ -0,0 +1,74 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <template class="NMAWsLeap" parent="GtkGrid">
++    <property name="valign">start</property>
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="leap_username_label">
++        <property name="label" translatable="yes">_Username</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">leap_username_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="leap_password_label">
++        <property name="label" translatable="yes">_Password</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">leap_password_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="leap_password_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="visibility">0</property>
++        <property name="activates_default">1</property>
++        <signal name="changed" handler="nma_ws_changed_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="show_checkbutton_leap">
++        <property name="label" translatable="yes">Sho_w password</property>
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="use_underline">1</property>
++        <signal name="toggled" handler="show_toggled_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="leap_username_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="activates_default">1</property>
++        <signal name="changed" handler="nma_ws_changed_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++  </template>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-ws-sae.ui b/src/ui/gtk4/nma-ws/nma-ws-sae.ui
+new file mode 100644
+index 00000000..9f01eaf7
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-ws-sae.ui
+@@ -0,0 +1,71 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <template class="NMAWsSae" parent="GtkGrid">
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="sae_label">
++        <property name="label" translatable="yes">_Password</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">psk_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="psk_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="max_length">64</property>
++        <property name="visibility">0</property>
++        <property name="activates_default">1</property>
++        <property name="width_chars">28</property>
++        <signal name="changed" handler="nma_ws_changed_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="sae_type_label">
++        <property name="label" translatable="yes">_Type</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">sae_type_combo</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="show_checkbutton_sae">
++        <property name="label" translatable="yes">Sho_w password</property>
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="use_underline">1</property>
++        <signal name="toggled" handler="show_toggled_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="sae_type_combo">
++        <layout>
++          <property name="column">1</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++  </template>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-ws-wep-key.ui b/src/ui/gtk4/nma-ws/nma-ws-wep-key.ui
+new file mode 100644
+index 00000000..18901cd4
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-ws-wep-key.ui
+@@ -0,0 +1,142 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkListStore" id="model3">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0" translatable="yes">Open System</col>
++      </row>
++      <row>
++        <col id="0" translatable="yes">Shared Key</col>
++      </row>
++    </data>
++  </object>
++  <object class="GtkListStore" id="model4">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0" translatable="yes">1 (Default)</col>
++      </row>
++      <row>
++        <col id="0">2</col>
++      </row>
++      <row>
++        <col id="0">3</col>
++      </row>
++      <row>
++        <col id="0">4</col>
++      </row>
++    </data>
++  </object>
++  <template class="NMAWsWepKey" parent="GtkGrid">
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="wep_key_label">
++        <property name="label" translatable="yes">_Key</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">wep_key_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="wep_key_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="max_length">64</property>
++        <property name="visibility">0</property>
++        <property name="activates_default">1</property>
++        <property name="width_chars">28</property>
++        <signal name="changed" handler="nma_ws_changed_cb" swapped="no"/>
++        <signal name="insert-text" handler="wep_entry_filter_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="show_checkbutton_wep">
++        <property name="label" translatable="yes">Sho_w key</property>
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="use_underline">1</property>
++        <signal name="toggled" handler="show_toggled_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="auth_method_label">
++        <property name="label" translatable="yes">Au_thentication</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">auth_method_combo</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">3</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="auth_method_combo">
++        <property name="hexpand">1</property>
++        <property name="model">model3</property>
++        <child>
++          <object class="GtkCellRendererText" id="renderer3"/>
++          <attributes>
++            <attribute name="text">0</attribute>
++          </attributes>
++        </child>
++        <signal name="changed" handler="nma_ws_changed_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">3</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="key_index_label">
++        <property name="label" translatable="yes">WEP inde_x</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">key_index_combo</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="key_index_combo">
++        <property name="hexpand">1</property>
++        <property name="model">model4</property>
++        <child>
++          <object class="GtkCellRendererText" id="renderer4"/>
++          <attributes>
++            <attribute name="text">0</attribute>
++          </attributes>
++        </child>
++        <signal name="changed" handler="key_index_combo_changed_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++  </template>
++</interface>
+diff --git a/src/ui/gtk4/nma-ws/nma-ws-wpa-psk.ui b/src/ui/gtk4/nma-ws/nma-ws-wpa-psk.ui
+new file mode 100644
+index 00000000..c8d0749c
+--- /dev/null
++++ b/src/ui/gtk4/nma-ws/nma-ws-wpa-psk.ui
+@@ -0,0 +1,70 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <template class="NMAWsWpaPsk" parent="GtkGrid">
++    <property name="row_spacing">6</property>
++    <property name="column_spacing">6</property>
++    <child>
++      <object class="GtkLabel" id="wpa_psk_label">
++        <property name="label" translatable="yes">_Password</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">wpa_psk_entry</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkEntry" id="wpa_psk_entry">
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="max_length">64</property>
++        <property name="visibility">0</property>
++        <property name="activates_default">1</property>
++        <signal name="changed" handler="nma_ws_changed_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="wpa_psk_type_label">
++        <property name="label" translatable="yes">_Type</property>
++        <property name="use_underline">1</property>
++        <property name="mnemonic_widget">wpa_psk_type_combo</property>
++        <property name="xalign">1</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkCheckButton" id="show_checkbutton_wpa">
++        <property name="label" translatable="yes">Sho_w password</property>
++        <property name="focusable">1</property>
++        <property name="hexpand">1</property>
++        <property name="use_underline">1</property>
++        <signal name="toggled" handler="show_toggled_cb" swapped="no"/>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">1</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkComboBox" id="wpa_psk_type_combo">
++        <layout>
++          <property name="column">1</property>
++          <property name="row">2</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <placeholder/>
++    </child>
++  </template>
++</interface>
+diff --git a/src/ui/gtk4/nma.gresource.xml b/src/ui/gtk4/nma.gresource.xml
+new file mode 100644
+index 00000000..5c75f112
+--- /dev/null
++++ b/src/ui/gtk4/nma.gresource.xml
+@@ -0,0 +1,22 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<gresources>
++	<gresource prefix="/org/gnome/libnma">
++		<file preprocess="xml-stripblanks">wifi.ui</file>
++		<file preprocess="xml-stripblanks">nma-pkcs11-token-login-dialog.ui</file>
++		<file preprocess="xml-stripblanks">nma-pkcs11-cert-chooser-dialog.ui</file>
++		<file preprocess="xml-stripblanks">nma-mobile-wizard.ui</file>
++		<file preprocess="xml-stripblanks">nma-vpn-password-dialog.ui</file>
++		<file preprocess="xml-stripblanks">nma-bar-code-widget.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-ws-802-1x.ui">nma-ws/nma-ws-802-1x.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-ws-leap.ui">nma-ws/nma-ws-leap.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-ws-sae.ui">nma-ws/nma-ws-sae.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-ws-wep-key.ui">nma-ws/nma-ws-wep-key.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-ws-wpa-psk.ui">nma-ws/nma-ws-wpa-psk.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-eap-fast.ui">nma-ws/nma-eap-fast.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-eap-leap.ui">nma-ws/nma-eap-leap.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-eap-peap.ui">nma-ws/nma-eap-peap.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-eap-simple.ui">nma-ws/nma-eap-simple.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-eap-tls.ui">nma-ws/nma-eap-tls.ui</file>
++                <file preprocess="xml-stripblanks" alias="nma-eap-ttls.ui">nma-ws/nma-eap-ttls.ui</file>
++	</gresource>
++</gresources>
+diff --git a/src/ui/gtk4/wifi.ui b/src/ui/gtk4/wifi.ui
+new file mode 100644
+index 00000000..bddd30a3
+--- /dev/null
++++ b/src/ui/gtk4/wifi.ui
+@@ -0,0 +1,187 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<interface domain="libnma">
++  <requires lib="gtk" version="4.0"/>
++  <object class="GtkListStore" id="model1">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0"> </col>
++      </row>
++    </data>
++  </object>
++  <object class="GtkListStore" id="model2">
++    <columns>
++      <column type="gchararray"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0"> </col>
++      </row>
++    </data>
++  </object>
++  <object class="GtkGrid" id="wifi_dialog">
++    <property name="margin_start">12</property>
++    <property name="margin_end">12</property>
++    <property name="margin_top">12</property>
++    <property name="margin_bottom">12</property>
++    <property name="row_spacing">12</property>
++    <property name="column_spacing">12</property>
++    <child>
++      <object class="GtkImage" id="image1">
++        <property name="valign">start</property>
++        <property name="margin_start">12</property>
++        <property name="margin_end">12</property>
++        <property name="margin_top">12</property>
++        <property name="margin_bottom">12</property>
++        <property name="icon_name">network-wireless</property>
++        <property name="icon_size">6</property>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkLabel" id="caption_label">
++        <property name="margin_start">12</property>
++        <property name="margin_end">12</property>
++        <property name="margin_top">12</property>
++        <property name="margin_bottom">12</property>
++        <property name="use_markup">1</property>
++        <property name="wrap">1</property>
++        <property name="max_width_chars">50</property>
++        <property name="xalign">0</property>
++        <layout>
++          <property name="column">1</property>
++          <property name="row">0</property>
++        </layout>
++      </object>
++    </child>
++    <child>
++      <object class="GtkGrid" id="table1">
++        <property name="row_spacing">6</property>
++        <property name="column_spacing">6</property>
++        <child>
++          <object class="GtkBox" id="security_vbox">
++            <property name="hexpand">1</property>
++            <property name="orientation">vertical</property>
++            <child>
++              <placeholder/>
++            </child>
++            <layout>
++              <property name="column">0</property>
++              <property name="row">4</property>
++              <property name="column-span">2</property>
++            </layout>
++          </object>
++        </child>
++        <child>
++          <object class="GtkLabel" id="security_combo_label">
++            <property name="label" translatable="yes">Wi-Fi _security</property>
++            <property name="use_underline">1</property>
++            <property name="mnemonic_widget">security_combo</property>
++            <property name="xalign">1</property>
++            <layout>
++              <property name="column">0</property>
++              <property name="row">3</property>
++            </layout>
++          </object>
++        </child>
++        <child>
++          <object class="GtkComboBox" id="security_combo">
++            <property name="hexpand">1</property>
++            <property name="model">model1</property>
++            <child>
++              <object class="GtkCellRendererText" id="renderer1"/>
++              <attributes>
++                <attribute name="text">0</attribute>
++              </attributes>
++            </child>
++            <layout>
++              <property name="column">1</property>
++              <property name="row">3</property>
++            </layout>
++          </object>
++        </child>
++        <child>
++          <object class="GtkLabel" id="network_name_label">
++            <property name="label" translatable="yes">_Network name</property>
++            <property name="use_underline">1</property>
++            <property name="mnemonic_widget">network_name_entry</property>
++            <property name="xalign">1</property>
++            <layout>
++              <property name="column">0</property>
++              <property name="row">2</property>
++            </layout>
++          </object>
++        </child>
++        <child>
++          <object class="GtkEntry" id="network_name_entry">
++            <property name="focusable">1</property>
++            <property name="activates_default">1</property>
++            <layout>
++              <property name="column">1</property>
++              <property name="row">2</property>
++            </layout>
++          </object>
++        </child>
++        <child>
++          <object class="GtkLabel" id="connection_label">
++            <property name="label" translatable="yes">C_onnection</property>
++            <property name="use_underline">1</property>
++            <property name="mnemonic_widget">connection_combo</property>
++            <property name="xalign">1</property>
++            <layout>
++              <property name="column">0</property>
++              <property name="row">1</property>
++            </layout>
++          </object>
++        </child>
++        <child>
++          <object class="GtkComboBox" id="connection_combo">
++            <property name="hexpand">1</property>
++            <layout>
++              <property name="column">1</property>
++              <property name="row">1</property>
++            </layout>
++          </object>
++        </child>
++        <child>
++          <object class="GtkLabel" id="device_label">
++            <property name="label" translatable="yes">Wi-Fi _adapter</property>
++            <property name="use_underline">1</property>
++            <property name="mnemonic_widget">device_combo</property>
++            <property name="xalign">1</property>
++            <layout>
++              <property name="column">0</property>
++              <property name="row">0</property>
++            </layout>
++          </object>
++        </child>
++        <child>
++          <object class="GtkComboBox" id="device_combo">
++            <property name="hexpand">1</property>
++            <property name="model">model2</property>
++            <child>
++              <object class="GtkCellRendererText" id="renderer2"/>
++              <attributes>
++                <attribute name="text">0</attribute>
++              </attributes>
++            </child>
++            <layout>
++              <property name="column">1</property>
++              <property name="row">0</property>
++            </layout>
++          </object>
++        </child>
++        <layout>
++          <property name="column">0</property>
++          <property name="row">1</property>
++          <property name="column-span">2</property>
++        </layout>
++      </object>
++    </child>
++  </object>
++</interface>
+diff --git a/src/ui/meson.build b/src/ui/meson.build
+new file mode 100644
+index 00000000..2f8eec99
+--- /dev/null
++++ b/src/ui/meson.build
+@@ -0,0 +1,11 @@
++if enable_libnma_gtk4
++  ui_dir = 'gtk4'
++else
++  ui_dir = 'gtk3'
++endif
++
++ui_sources = gnome.compile_resources(
++  'nma-resources',
++  join_paths(ui_dir, 'nma.gresource.xml'),
++  source_dir: ui_dir
++)
+-- 
+2.35.1
+

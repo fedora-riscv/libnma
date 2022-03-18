@@ -7,7 +7,7 @@
 
 %global rpm_version 1.8.34
 %global real_version 1.8.34
-%global release_version 1
+%global release_version 2
 
 %global real_version_major %(printf '%s' '%{real_version}' | sed -n 's/^\\([1-9][0-9]*\\.[1-9][0-9]*\\)\\.[1-9][0-9]*$/\\1/p')
 
@@ -20,13 +20,22 @@
 Name:           libnma
 Summary:        NetworkManager GUI library
 Version:        %{rpm_version}
-Release:        %{release_version}%{?dist}.1
+Release:        %{release_version}%{?dist}
 # The entire source code is GPLv2+ except some files in shared/ which are LGPLv2+
 License:        GPLv2+ and LGPLv2+
 URL:            https://gitlab.gnome.org/GNOME/libnma/
 Source0:        https://download.gnome.org/sources/libnma/%{real_version_major}/%{name}-%{real_version}.tar.xz
 
 Patch1:         0001-nm-applet-no-notifications.patch
+# Include working UI resources for GTK4 so UI elements in GNOME
+# Control Center provided by this package work
+# https://bugzilla.redhat.com/show_bug.cgi?id=2060868
+# https://gitlab.gnome.org/GNOME/libnma/-/merge_requests/26
+# Rebased and squashed
+Patch2:         0001-Ship-and-compile-both-GTK3-and-GTK4-UI-files.patch
+# Fixup to build GTK3 and GTK4 ui sources separately for each lib
+# https://gitlab.gnome.org/GNOME/libnma/-/merge_requests/26#note_1411364
+Patch3:         0001-meson-build-separate-UI-sources-for-GTK3-and-GTK4-li.patch
 
 Requires:       mobile-broadband-provider-info >= %{mbp_version}
 
@@ -149,6 +158,9 @@ files to be used for integrating GUI tools with NetworkManager.
 
 
 %changelog
+* Fri Mar 18 2022 Adam Williamson <awilliam@redhat.com> - 1.8.34-2
+- Backport MR #26 to fix UI files in GTK4 (#2060868)
+
 * Thu Jan 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1.8.34-1.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
 

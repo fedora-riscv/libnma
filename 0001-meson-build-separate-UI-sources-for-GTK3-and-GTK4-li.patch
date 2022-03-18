@@ -1,0 +1,56 @@
+From 40b591aaa0fcbc2bf37f89909477d59a102a5fa4 Mon Sep 17 00:00:00 2001
+From: Adam Williamson <awilliam@redhat.com>
+Date: Fri, 18 Mar 2022 15:56:12 -0700
+Subject: [PATCH] meson: build separate UI sources for GTK3 and GTK4 libraries
+
+We can't just do one or the other, each build of the library
+needs the correct respective UI resources.
+
+Signed-off-by: Adam Williamson <awilliam@redhat.com>
+---
+ src/meson.build    |  2 +-
+ src/ui/meson.build | 18 ++++++++++--------
+ 2 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/src/meson.build b/src/meson.build
+index 6e1a15e4..efe3fb03 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -103,7 +103,7 @@ libnma_dep = declare_dependency(
+ if enable_libnma_gtk4
+   libnma_gtk4 = shared_library(
+     'nma-gtk4',
+-    sources: gir_sources + ui_sources,
++    sources: gir_sources + ui_sources4,
+     version: libversion,
+     include_directories: incs,
+     dependencies: [ deps, gtk4_dep ],
+diff --git a/src/ui/meson.build b/src/ui/meson.build
+index 2f8eec99..60dbaeef 100644
+--- a/src/ui/meson.build
++++ b/src/ui/meson.build
+@@ -1,11 +1,13 @@
+-if enable_libnma_gtk4
+-  ui_dir = 'gtk4'
+-else
+-  ui_dir = 'gtk3'
+-endif
+-
+ ui_sources = gnome.compile_resources(
+   'nma-resources',
+-  join_paths(ui_dir, 'nma.gresource.xml'),
+-  source_dir: ui_dir
++  join_paths('gtk3', 'nma.gresource.xml'),
++  source_dir: 'gtk3'
+ )
++
++if enable_libnma_gtk4
++  ui_sources4 = gnome.compile_resources(
++    'nma-resources4',
++    join_paths('gtk4', 'nma.gresource.xml'),
++    source_dir: 'gtk4'
++  )
++endif
+-- 
+2.35.1
+
