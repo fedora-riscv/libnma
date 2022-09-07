@@ -11,14 +11,20 @@
 %bcond_with libnma_gtk4
 %endif
 
+%if 0%{?fedora} >= 37 || 0%{?rhel} >= 10
+%bcond_without gcr_gtk4
+%else
+%bcond_with gcr_gtk4
+%endif
+
 Name:           libnma
 Summary:        NetworkManager GUI library
-Version:        1.8.40
-Release:        2%{?dist}
+Version:        1.10.0
+Release:        1%{?dist}
 # The entire source code is GPLv2+ except some files in shared/ which are LGPLv2+
 License:        GPLv2+ and LGPLv2+
 URL:            https://gitlab.gnome.org/GNOME/libnma/
-Source0:        https://download.gnome.org/sources/libnma/1.8/%{name}-%{version}.tar.xz
+Source0:        https://download.gnome.org/sources/libnma/1.10/%{name}-%{version}.tar.xz
 
 Patch1:         0001-nm-applet-no-notifications.patch
 
@@ -40,7 +46,12 @@ BuildRequires:  pkgconfig
 BuildRequires:  meson
 BuildRequires:  gtk-doc
 BuildRequires:  iso-codes-devel
+%if %{with gcr_gtk4}
+BuildRequires:  gcr-gtk3-devel
+BuildRequires:  gcr-gtk4-devel
+%else
 BuildRequires:  gcr-devel
+%endif
 BuildRequires:  mobile-broadband-provider-info-devel >= %{mbp_version}
 
 %description
@@ -95,9 +106,14 @@ files to be used for integrating GUI tools with NetworkManager.
         -Dgcr=true \
         -Dvapi=false \
 %if %{with libnma_gtk4}
-        -Dlibnma_gtk4=true
+        -Dlibnma_gtk4=true \
 %else
-        -Dlibnma_gtk4=false
+        -Dlibnma_gtk4=false \
+%endif
+%if %{with gcr_gtk4}
+        -Dgcr_gtk4=true
+%else
+        -Dgcr_gtk4=false
 %endif
 %meson_build
 
